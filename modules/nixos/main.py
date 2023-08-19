@@ -12,6 +12,7 @@ import libcalamares
 import os
 import subprocess
 import re
+import shutil
 
 import gettext
 _ = gettext.translation("calamares-python",
@@ -33,6 +34,7 @@ cfghead = """# Edit this configuration file to define what should be installed o
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      (import ./bigbother-config.nix { username = "@@username@@"; fullname = "@@fullname@@"; nixversion = "@@nixosversion@@"; inherit pkgs; })
     ];
 
 """
@@ -274,7 +276,7 @@ cfgautologingdm = """  # Workaround for GNOME autologin: https://github.com/NixO
 """
 
 cfgautologintty = """  # Enable automatic login for the user.
-  services.getty.autologinUser = "@@username@@";
+  #services.getty.autologinUser = "@@username@@";
 
 """
 
@@ -324,7 +326,7 @@ cfgtail = """  # Some programs need SUID wrappers, can be configured further or 
 
 
 def pretty_name():
-    return _("Installing NixOS.")
+    return _("Installing BigBother.")
 
 
 status = pretty_name()
@@ -332,7 +334,6 @@ status = pretty_name()
 
 def pretty_status_message():
     return status
-
 
 def catenate(d, key, *values):
     """
@@ -348,7 +349,6 @@ def catenate(d, key, *values):
 
 def run():
     """NixOS Configuration."""
-
     global status
     status = _("Configuring NixOS")
     libcalamares.job.setprogress(0.1)
@@ -426,7 +426,6 @@ def run():
 
     status = _("Configuring NixOS")
     libcalamares.job.setprogress(0.18)
-
     cfg += cfgnetwork
     if gs.value("packagechooser_packagechooser") == "enlightenment":
         cfg += cfgconnman
@@ -455,30 +454,30 @@ def run():
             cfg += cfglocaleextra
             for conf in localeconf:
                 catenate(variables, conf, localeconf.get(conf).split("/")[0])
-
-    # Choose desktop environment
-    if gs.value("packagechooser_packagechooser") == "gnome":
-        cfg += cfggnome
-    elif gs.value("packagechooser_packagechooser") == "plasma":
-        cfg += cfgplasma
-    elif gs.value("packagechooser_packagechooser") == "xfce":
-        cfg += cfgxfce
-    elif gs.value("packagechooser_packagechooser") == "pantheon":
-        cfg += cfgpantheon
-    elif gs.value("packagechooser_packagechooser") == "cinnamon":
-        cfg += cfgcinnamon
-    elif gs.value("packagechooser_packagechooser") == "mate":
-        cfg += cfgmate
-    elif gs.value("packagechooser_packagechooser") == "enlightenment":
-        cfg += cfgenlightenment
-    elif gs.value("packagechooser_packagechooser") == "lxqt":
-        cfg += cfglxqt
-    elif gs.value("packagechooser_packagechooser") == "lumina":
-        cfg += cfglumina
-    elif gs.value("packagechooser_packagechooser") == "budgie":
-        cfg += cfgbudgie
-    elif gs.value("packagechooser_packagechooser") == "deepin":
-        cfg += cfgdeepin
+    cfg += cfgplasma
+    # # Choose desktop environment
+    # if gs.value("packagechooser_packagechooser") == "gnome":
+    #     cfg += cfggnome
+    # elif gs.value("packagechooser_packagechooser") == "plasma":
+    #     cfg += cfgplasma
+    # elif gs.value("packagechooser_packagechooser") == "xfce":
+    #     cfg += cfgxfce
+    # elif gs.value("packagechooser_packagechooser") == "pantheon":
+    #     cfg += cfgpantheon
+    # elif gs.value("packagechooser_packagechooser") == "cinnamon":
+    #     cfg += cfgcinnamon
+    # elif gs.value("packagechooser_packagechooser") == "mate":
+    #     cfg += cfgmate
+    # elif gs.value("packagechooser_packagechooser") == "enlightenment":
+    #     cfg += cfgenlightenment
+    # elif gs.value("packagechooser_packagechooser") == "lxqt":
+    #     cfg += cfglxqt
+    # elif gs.value("packagechooser_packagechooser") == "lumina":
+    #     cfg += cfglumina
+    # elif gs.value("packagechooser_packagechooser") == "budgie":
+    #     cfg += cfgbudgie
+    # elif gs.value("packagechooser_packagechooser") == "deepin":
+    #     cfg += cfgdeepin
 
     if (gs.value("keyboardLayout") is not None and gs.value("keyboardVariant") is not None):
         cfg += cfgkeymap
@@ -544,7 +543,7 @@ def run():
         fullname = gs.value("fullname")
         groups = ["networkmanager", "wheel"]
 
-        cfg += cfgusers
+        #cfg += cfgusers
         catenate(variables, "username", gs.value("username"))
         catenate(variables, "fullname", fullname)
         catenate(variables, "groups", (" ").join(
@@ -557,13 +556,15 @@ def run():
             cfg += cfgautologintty
 
     # Check if unfree packages are allowed
-    free = True
-    if gs.value("packagechooser_unfree") is not None:
-        if gs.value("packagechooser_unfree") == "unfree":
-            free = False
-            cfg += cfgunfree
+    # free = True
+    # if gs.value("packagechooser_unfree") is not None:
+    #     if gs.value("packagechooser_unfree") == "unfree":
+    #         free = False
+    cfg += cfgunfree
 
     cfg += cfgpkgs
+
+    
     # Use firefox as default as a graphical web browser, and add kate to plasma desktop
     if gs.value("packagechooser_packagechooser") == "plasma":
         catenate(variables, "pkgs", "\n      firefox\n      kate\n    #  thunderbird\n    ")
@@ -632,6 +633,8 @@ def run():
             libcalamares.utils.error(e.output.decode("utf8"))
         return (_("nixos-generate-config failed"), _(e.output.decode("utf8")))
 
+
+    libcalamares.utils.host_env_process_output(["cp", "/run/current-system/sw/share/calamares/bigbother-config.nix", root_mount_point + "/etc/nixos/bigbother-config.nix"])
     # Check for unfree stuff in hardware-configuration.nix
     hf = open(root_mount_point + "/etc/nixos/hardware-configuration.nix", "r")
     htxt = hf.read()
@@ -659,7 +662,7 @@ def run():
     libcalamares.utils.host_env_process_output(
         ["cp", "/dev/stdin", config], None, cfg)
 
-    status = _("Installing NixOS")
+    status = _("Installing BigBother")
     libcalamares.job.setprogress(0.3)
 
     # Install customizations
