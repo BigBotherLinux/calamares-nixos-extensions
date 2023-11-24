@@ -2,7 +2,9 @@
      SPDX-License-Identifier: CC0-1.0
 -->
 
-# Calamares Branding and Modules for NixOS
+# Calamares Branding and Modules for BigBother
+
+A fork that has flake support, and a lot of stupid changes spesifically made for the distro BigBother.
 
 ## Modules
 

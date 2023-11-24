@@ -34,9 +34,9 @@ cfghead = """# Edit this configuration file to define what should be installed o
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      (import ./bigbother-config.nix { username = "@@username@@"; fullname = "@@fullname@@"; nixversion = "@@nixosversion@@"; inherit pkgs; })
     ];
 
+    nix.settings.experimental-features = [ "nix-command" "flakes" ];
 """
 cfgbootefi = """  # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -258,7 +258,6 @@ cfgusers = """  # Define a user account. Don't forget to set a password with ‘
     isNormalUser = true;
     description = "@@fullname@@";
     extraGroups = [ @@groups@@ ];
-    packages = with pkgs; [@@pkgs@@];
   };
 
 """
@@ -543,7 +542,7 @@ def run():
         fullname = gs.value("fullname")
         groups = ["networkmanager", "wheel"]
 
-        #cfg += cfgusers
+        cfg += cfgusers
         catenate(variables, "username", gs.value("username"))
         catenate(variables, "fullname", fullname)
         catenate(variables, "groups", (" ").join(
@@ -555,16 +554,12 @@ def run():
         elif (gs.value("autoLoginUser") is not None):
             cfg += cfgautologintty
 
-    # Check if unfree packages are allowed
-    # free = True
-    # if gs.value("packagechooser_unfree") is not None:
-    #     if gs.value("packagechooser_unfree") == "unfree":
-    #         free = False
+
     cfg += cfgunfree
 
     cfg += cfgpkgs
 
-    
+
     # Use firefox as default as a graphical web browser, and add kate to plasma desktop
     if gs.value("packagechooser_packagechooser") == "plasma":
         catenate(variables, "pkgs", "\n      firefox\n      kate\n    #  thunderbird\n    ")
@@ -633,34 +628,21 @@ def run():
             libcalamares.utils.error(e.output.decode("utf8"))
         return (_("nixos-generate-config failed"), _(e.output.decode("utf8")))
 
-
-    libcalamares.utils.host_env_process_output(["cp", "/run/current-system/sw/share/calamares/bigbother-config.nix", root_mount_point + "/etc/nixos/bigbother-config.nix"])
-    # Check for unfree stuff in hardware-configuration.nix
-    hf = open(root_mount_point + "/etc/nixos/hardware-configuration.nix", "r")
-    htxt = hf.read()
-    search = re.search("boot\.extraModulePackages = \[ (.*) \];", htxt)
-
-    # Check if any extraModulePackages are defined, and remove if only free packages are allowed
-    if search is not None and free:
-        expkgs = search.group(1).split(" ")
-        for pkg in expkgs:
-            p = ".".join(pkg.split(".")[3:])
-            # Check package p is unfree
-            isunfree = subprocess.check_output(["nix-instantiate", "--eval", "--strict", "-E",
-                                               "with import <nixpkgs> {{}}; pkgs.linuxKernel.packageAliases.linux_default.{}.meta.unfree".format(p), "--json"], stderr=subprocess.STDOUT)
-            if isunfree == b'true':
-                libcalamares.utils.warning(
-                    "{} is marked as unfree, removing from hardware-configuration.nix".format(p))
-                expkgs.remove(pkg)
-        hardwareout = re.sub(
-            "boot\.extraModulePackages = \[ (.*) \];", "boot.extraModulePackages = [ {}];".format("".join(map(lambda x: x+" ", expkgs))), htxt)
-        # Write the hardware-configuration.nix file
-        libcalamares.utils.host_env_process_output(["cp", "/dev/stdin",
-                                                    root_mount_point+"/etc/nixos/hardware-configuration.nix"], None, hardwareout)
+    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/os.nix", root_mount_point + "/etc/nixos/os.nix"])
+    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/flake.lock", root_mount_point + "/etc/nixos/flake.lock"])
+    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/home.nix", root_mount_point + "/etc/nixos/home.nix"])
 
     # Write the configuration.nix file
     libcalamares.utils.host_env_process_output(
         ["cp", "/dev/stdin", config], None, cfg)
+
+    ff = open("/etc/bigbother/flake.nix", "r")
+    ftxt = ff.read()
+    if gs.value("username") is not None:
+        pattern = "users.nixos"
+        ftxt = ftxt.replace(pattern, "users." + str(gs.value("username")))
+        libcalamares.utils.host_env_process_output(
+            ["cp", "/dev/stdin", root_mount_point+"/etc/nixos/flake.nix"], None, ftxt)
 
     status = _("Installing BigBother")
     libcalamares.job.setprogress(0.3)
@@ -668,7 +650,7 @@ def run():
     # Install customizations
     try:
         output = ""
-        proc = subprocess.Popen(["pkexec", "nixos-install", "--no-root-passwd", "--root", root_mount_point], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(["pkexec", "nixos-install", "--no-root-passwd", "--root", root_mount_point, "--flake", root_mount_point+"/etc/nixos#bigbotherpc"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while True:
             line = proc.stdout.readline().decode("utf-8")
             output += line
