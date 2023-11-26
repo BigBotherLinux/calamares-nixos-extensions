@@ -113,15 +113,6 @@ cfglocaleextra = """  i18n.extraLocaleSettings = {
 
 """
 
-cfggnome = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
-
-"""
-
 cfgplasma = """  # Enable the X11 windowing system.
   services.xserver.enable = true;
 
@@ -131,89 +122,6 @@ cfgplasma = """  # Enable the X11 windowing system.
 
 """
 
-cfgxfce = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the XFCE Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xfce.enable = true;
-
-"""
-
-cfgpantheon = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the Pantheon Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.pantheon.enable = true;
-
-"""
-
-cfgcinnamon = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the Cinnamon Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.cinnamon.enable = true;
-
-"""
-
-cfgmate = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the MATE Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.mate.enable = true;
-
-"""
-
-cfgenlightenment = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the Enlightenment Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.enlightenment.enable = true;
-
-  # Enable acpid
-  services.acpid.enable = true;
-
-"""
-
-cfglxqt = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the LXQT Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.lxqt.enable = true;
-
-"""
-
-cfglumina = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the Lumina Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.lumina.enable = true;
-
-"""
-
-cfgbudgie = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the Budgie Desktop environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.budgie.enable = true;
-
-"""
-
-cfgdeepin = """  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the Deepin Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.deepin.enable = true;
-
-"""
 
 cfgkeymap = """  # Configure keymap in X11
   services.xserver = {
@@ -284,10 +192,10 @@ cfgunfree = """  # Allow unfree packages
 
 cfgpkgs = """  # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
+  #environment.systemPackages = with pkgs; [
   #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   #  wget
-  ];
+  #];
 
 """
 
@@ -535,12 +443,7 @@ def run():
         catenate(variables, "fullname", fullname)
         catenate(variables, "groups", (" ").join(
             ["\"" + s + "\"" for s in groups]))
-        if (gs.value("autoLoginUser") is not None and gs.value("packagechooser_packagechooser") is not None and gs.value("packagechooser_packagechooser") != ""):
-            cfg += cfgautologin
-            if (gs.value("packagechooser_packagechooser") == "gnome"):
-                cfg += cfgautologingdm
-        elif (gs.value("autoLoginUser") is not None):
-            cfg += cfgautologintty
+
 
 
     cfg += cfgunfree
@@ -616,7 +519,7 @@ def run():
             libcalamares.utils.error(e.output.decode("utf8"))
         return (_("nixos-generate-config failed"), _(e.output.decode("utf8")))
 
-    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/os.nix", root_mount_point + "/etc/nixos/os.nix"])
+    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/flake.nix", root_mount_point + "/etc/nixos/flake.nix"])
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/flake.lock", root_mount_point + "/etc/nixos/flake.lock"])
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/home.nix", root_mount_point + "/etc/nixos/home.nix"])
     libcalamares.utils.host_env_process_output(["mkdir", "-p", root_mount_point + "/etc/nixos/modules"]),
@@ -626,13 +529,13 @@ def run():
     libcalamares.utils.host_env_process_output(
         ["cp", "/dev/stdin", config], None, cfg)
 
-    ff = open("/etc/bigbother/flake.nix", "r")
+    ff = open("/etc/bigbother/os.nix", "r")
     ftxt = ff.read()
     if gs.value("username") is not None:
         pattern = "users.nixos"
         ftxt = ftxt.replace(pattern, "users." + str(gs.value("username")))
         libcalamares.utils.host_env_process_output(
-            ["cp", "/dev/stdin", root_mount_point+"/etc/nixos/flake.nix"], None, ftxt)
+            ["cp", "/dev/stdin", root_mount_point+"/etc/nixos/os.nix"], None, ftxt)
 
     status = _("Installing BigBother")
     libcalamares.job.setprogress(0.3)
