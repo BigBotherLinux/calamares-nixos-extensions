@@ -524,6 +524,7 @@ def run():
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/home.nix", root_mount_point + "/etc/nixos/home.nix"])
     libcalamares.utils.host_env_process_output(["mkdir", "-p", root_mount_point + "/etc/nixos/modules"]),
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/modules/version.nix", root_mount_point + "/etc/nixos/modules/version.nix"])
+    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/modules/bb-functions.nix", root_mount_point + "/etc/nixos/modules/bb-functions.nix"])
 
     # Write the configuration.nix file
     libcalamares.utils.host_env_process_output(
