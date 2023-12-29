@@ -256,7 +256,7 @@ def run():
     """NixOS Configuration."""
     global status
     status = _("Configuring NixOS")
-    libcalamares.job.setprogress(0.1)
+    libcalamares.job.setprogress(0.99)
 
     # Create initial config file
     cfg = cfghead
@@ -292,7 +292,7 @@ def run():
         if part["claimed"] == True and part["fsName"] == "luks" and fw_type != "efi":
             cfg += cfgbootgrubcrypt
             status = _("Setting up LUKS")
-            libcalamares.job.setprogress(0.15)
+            libcalamares.job.setprogress(0.99)
             try:
                 # Create /crypto_keyfile.bin
                 libcalamares.utils.host_env_process_output(
@@ -320,7 +320,7 @@ def run():
                 return (_("cryptsetup failed"), _("Failed to add {} to /crypto_keyfile.bin".format(part["luksMapperName"])))
 
     status = _("Configuring NixOS")
-    libcalamares.job.setprogress(0.18)
+    libcalamares.job.setprogress(0.99)
     cfg += cfgnetwork
     if gs.value("packagechooser_packagechooser") == "enlightenment":
         cfg += cfgconnman
@@ -488,7 +488,7 @@ def run():
     for part in gs.value("partitions"):
         if part["claimed"] == True and part["fs"] == "linuxswap":
             status = _("Mounting swap")
-            libcalamares.job.setprogress(0.2)
+            libcalamares.job.setprogress(0.99)
             if part["fsName"] == "luks":
                 try:
                     libcalamares.utils.host_env_process_output(
@@ -508,7 +508,7 @@ def run():
             break
 
     status = _("Generating NixOS configuration")
-    libcalamares.job.setprogress(0.25)
+    libcalamares.job.setprogress(0.99)
 
     try:
         # Generate hardware.nix with mounted swap device
@@ -538,8 +538,8 @@ def run():
         libcalamares.utils.host_env_process_output(
             ["cp", "/dev/stdin", root_mount_point+"/etc/nixos/os.nix"], None, ftxt)
 
-    status = _("Installing BigBother")
-    libcalamares.job.setprogress(0.3)
+    status = _("Installing BigBother...")
+    libcalamares.job.setprogress(0.99)
 
     # Install customizations
     try:

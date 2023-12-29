@@ -4,7 +4,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
   outputs = { self, nixpkgs }: {
-  packages.x86_64-linux.calamares-nixos-extensions=
+  packages.x86_64-linux.calamares-nixos-extensions =
       with import nixpkgs { system = "x86_64-linux"; };
       ## Custom calamares build
 
@@ -21,7 +21,6 @@
           ls -la .
           cp -r ./modules $out/lib/calamares/
           cp -r ./config/* $out/share/calamares/
-          cp -r ./branding $out/share/calamares/
           runHook postInstall
         '';
 
@@ -33,5 +32,16 @@
           platforms = platforms.linux;
         };
       };
+      devShells.x86_64-linux.default =
+        let
+          pkgs = import nixpkgs { system = "x86_64-linux"; };
+        in
+        pkgs.mkShell {
+          buildInputs = with pkgs; [
+            (self.packages.x86_64-linux.calamares-nixos-extensions)
+            pkgs.calamares
+            pkgs.calamares-nixos
+          ];
+        };
   };
 }
