@@ -522,9 +522,7 @@ def run():
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/flake.nix", root_mount_point + "/etc/nixos/flake.nix"])
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/flake.lock", root_mount_point + "/etc/nixos/flake.lock"])
     libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/home.nix", root_mount_point + "/etc/nixos/home.nix"])
-    libcalamares.utils.host_env_process_output(["mkdir", "-p", root_mount_point + "/etc/nixos/modules"]),
-    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/modules/version.nix", root_mount_point + "/etc/nixos/modules/version.nix"])
-    libcalamares.utils.host_env_process_output(["cp", "/etc/bigbother/modules/bb-functions.nix", root_mount_point + "/etc/nixos/modules/bb-functions.nix"])
+    libcalamares.utils.host_env_process_output(["cp", "-r", "/etc/bigbother/modules/", root_mount_point + "/etc/nixos/"])
 
     # Write the configuration.nix file
     libcalamares.utils.host_env_process_output(
