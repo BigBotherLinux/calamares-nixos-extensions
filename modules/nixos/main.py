@@ -39,8 +39,11 @@ cfghead = """# Edit this configuration file to define what should be installed o
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 """
 cfgbootefi = """  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
+  boot.loader.grub.enable = true;
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.device = "nodev";
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.useOSProber = true;
 
 """
 
